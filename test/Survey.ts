@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Contract } from "ethers";
+import { Contract, keccak256 } from "ethers";
 import { network } from "hardhat";
 import { title } from "process";
 import type { SurveyFactory } from "../types/ethers-contracts/SurveyFactory.js";
@@ -7,7 +7,7 @@ interface Question {
     question: string;
     options: string[];
 }
-/* 
+
 it("Survey init", async () => {
     const { ethers } = await network.connect();
 
@@ -19,51 +19,97 @@ it("Survey init", async () => {
             options: ["구글폼 운영자", "탈중앙화된 블록체인 (관리주체 없으며 모든 데이터 공개)", "상관없음",],
         }
     ]
-    
-    const factory = await ethers.deployContract("SurveyFactory", [
-        ethers.parseEther("50"),
-        ethers.parseEther("0.1"),
-    ]);
-    const tx = await factory.createSurvey({
+
+    const survey = await ethers.deployContract("Survey", [
         title,
         description,
-        targetNumber: 100,
+        100,
         questions,
-    }, {
+    ], {
         value: ethers.parseEther("100"),
     });
 
-    // const surveys = await factory.getSurveys();
-    const receipt = await tx.wait();
-    let surveyAddress;
-    receipt?.logs.forEach((log) => {
-        const event = factory.interface.parseLog(log)
-        if(event?.name == "SurveyCreated") {
-            surveyAddress = event.args[0];
-        }
-    })
+    const slot0 = ethers.toBeHex(0, 32);
+    // console.log(slot0);
+    const slot0Data = await ethers.provider.getStorage(
+      survey.getAddress(), 
+      ethers.toBeHex(0, 32),  // 슬롯 넘버를 주어야 함
+    ); 
 
+    const slot1Data = await ethers.provider.getStorage(
+      survey.getAddress(), 
+      ethers.toBeHex(1, 32),  // 슬롯 넘버를 주어야 함
+    ); 
 
-    // await ethers.deployContract("Survey", [title, description, ...])
-    const surveyC = await ethers.getContractFactory("Survey");
-    const signers = await ethers.getSigners();
-    const respondent = signers[0];
-    if(surveyAddress) {
-        const survey = await surveyC.attach(surveyAddress);
-        await survey.connect(respondent);
-        console.log(ethers.formatEther(await ethers.provider.getBalance(respondent)));
-        const submitTx = await survey.submitAnswer({
-            respondent,
-            answers: [1],
-        });
-        await submitTx.wait();
-        console.log(ethers.formatEther(await ethers.provider.getBalance(respondent)));
-    }
+    const slot2Data = await ethers.provider.getStorage(
+      survey.getAddress(), 
+      ethers.toBeHex(2, 32),  // 슬롯 넘버를 주어야 함
+    ); 
 
+    const slot3Data = await ethers.provider.getStorage(
+      survey.getAddress(), 
+      ethers.toBeHex(3, 32),  // 슬롯 넘버를 주어야 함
+    ); 
+
+    const slot4Data = await ethers.provider.getStorage(
+      survey.getAddress(), 
+      ethers.toBeHex(4, 32),  // 슬롯 넘버를 주어야 함
+    ); 
+
+    const slot5Data = await ethers.provider.getStorage(
+      survey.getAddress(), 
+      ethers.toBeHex(5, 32),  // 슬롯 넘버를 주어야 함
+    );
+    
+    const slot6Data = await ethers.provider.getStorage(
+      survey.getAddress(), 
+      ethers.toBeHex(6, 32),  // 슬롯 넘버를 주어야 함
+    );
+
+    const decodeUni = (hex: string) => 
+      Buffer.from(hex.slice(2), 'hex').toString('utf-8');
+
+    const nextHash = (hex: string, i: number) =>
+      "0x" + (BigInt(hex) + BigInt(i)).toString(16);
+
+    console.log(slot0Data);
+
+    // primitive type
+    console.log("--- primitive types ---");
+    console.log(slot2Data);
+    console.log(slot3Data);
+
+    // long string type
+    console.log("\n--- long string types ---");
+    console.log(slot1Data); // 0x103 == 259
+    // pDesc = hash256(pSlot1), getStorage(pDesc)
+    const pDesc = keccak256(ethers.toBeHex(1, 32));
+    const desc0 = await ethers.provider.getStorage(await survey.getAddress(), pDesc);
+    console.log(desc0); // 이러면 중간에 짤린 메시지가 추가된다. 따라서 pdesc의 다음 주소 '+1' 을 알아야 한다.
+
+    const desc1 = await ethers.provider.getStorage(await survey.getAddress(), nextHash(pDesc, 1));
+
+    const desc2 = await ethers.provider.getStorage(await survey.getAddress(), nextHash(pDesc, 2));
+
+    const desc3 = await ethers.provider.getStorage(await survey.getAddress(), nextHash(pDesc, 3));
+
+    const desc4 = await ethers.provider.getStorage(await survey.getAddress(), nextHash(pDesc, 4));
+
+    const pQuestions = "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199";
+    // map
+    console.log(slot6Data);
+    const addr = "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199";
+    const mapKeyAddr = keccak256(
+      ethers.toBeHex(addr, 32) + ethers.toBeHex(6, 32).slice(2),
+    );
+    const map1Value = await ethers.provider.getStorage(
+      survey.getAddress(),
+      nextHash(pQuestions, 3),
+    );
 });
-*/
 
 // assignment 2
+/*
 describe("SurveyFactory Contract", () => {
 
   let factory: SurveyFactory, owner, respondent1, respondent2;
@@ -165,3 +211,4 @@ describe("SurveyFactory Contract", () => {
   });
 
 });
+*/

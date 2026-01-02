@@ -11,13 +11,16 @@ struct Answer {
   uint8[] answers;
 }
 
+// 기본적으로 state들은 slot에 차곡차곡 저장이 되는데 primitive 타입의 경우 슬롯에 그 값이 저장되고, 참조타입의 경우 32byte 보다 커지기 때문에 다른 방식으로 저장된다.
 contract Survey {
-  string public title;
+  string public title; // 길이가 길 경우 참조 타입이지만 짧을 경우에는 primitive 타입처럼 동작함.
   string public description;
   uint256 public targetNumber;
   uint256 public rewardAmount;
   Question[] public questions;
   Answer[] answers;
+  mapping(address => uint) test1Map;
+  mapping(address => uint) test2Map;
 
   constructor(
     string memory _title,
@@ -29,6 +32,7 @@ contract Survey {
     description = _description;
     targetNumber = _targetNumber;
     rewardAmount = msg.value / _targetNumber;
+    test1Map[0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199] = 1000;
     for (uint i = 0; i < _questions.length; i++) {
       /*    questions.push(
                 Question({
